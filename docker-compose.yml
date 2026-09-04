@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  
+  database:
+    image: postgres:15-alpine
+    container_name: lab_database
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: computer_lab_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+  app:
+    build:
+      context: ./computerlab  
+      dockerfile: Dockerfile
+    container_name: lab_nextjs_app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:password123@database:5432/computer_lab_db?schema=public
+    depends_on:
+      - database
+    restart: always
+
+volumes:
+  pgdata:

@@ -29,7 +29,7 @@ export default function Header({setIsCollapsed, isCollapsed}:Props){
                     </>
                 )}
             </button>
-            <span className="text-lg font-semibold">HEADER</span>
+            <span className="text-lg font-semibold">Computer Lab</span>
         </div>
 
         </>

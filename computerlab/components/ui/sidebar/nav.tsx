@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 import {ChevronDown , LucideIcon} from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {useEffect, useState} from "react"
+import {useEffect, useState, useRef} from "react"
 
 interface NavProps {
     isCollapsed:boolean;
@@ -34,8 +34,10 @@ interface NavProps {
 export function Nav({links , isCollapsed}:NavProps){
     const pathName = usePathname();
     const [openDropdownIndex , setOpenDropdownIndex] = useState<number|null>(null)
+    const hasAutoOpened = useRef(false) 
 
     useEffect(()=>{
+      if (hasAutoOpened.current) return
         links.forEach((link,index)=>{
             if (link.dropdownItems){
                 const isDropdownActive = link.dropdownItems.some(
@@ -43,12 +45,14 @@ export function Nav({links , isCollapsed}:NavProps){
                 )
                 if (isDropdownActive){
                     setOpenDropdownIndex(index)
+                    hasAutoOpened.current = true
                 }
             }
         })
     }, [pathName , links])
 
-    const handleToggleDropdown = (index:number)=>{
+    const handleToggleDropdown = (index:number , e:React.MouseEvent)=>{
+      e.preventDefault()
         setOpenDropdownIndex(openDropdownIndex === index ? null:index)
     }
     return (
@@ -145,7 +149,7 @@ export function Nav({links , isCollapsed}:NavProps){
               ) : (
                 <>
                   <div
-                    onClick={() => handleToggleDropdown(index)}
+                    onClick={(e) => handleToggleDropdown(index,e)}
                     className={cn(
                       buttonVariants({
                         variant:

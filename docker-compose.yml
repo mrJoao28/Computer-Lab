@@ -1,32 +1,54 @@
-version: '3.8'
-
 services:
-  
   database:
-    image: postgres:15-alpine
-    container_name: lab_database
-    ports:
-      - "5432:5432"
+    image: postgres:16-alpine
+    container_name: computerlab_database
+
+    restart: unless-stopped
+
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: computer_lab_db
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password123}
+      POSTGRES_DB: ${POSTGRES_DB:-computer_lab_db}
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: always
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-computer_lab_db}"
+        ]
+
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
   app:
     build:
-      context: ./computerlab  
+      context: ./computerlab
       dockerfile: Dockerfile
-    container_name: lab_nextjs_app
+
+    container_name: computerlab_app
+
+    restart: unless-stopped
+
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
+
     environment:
-      - DATABASE_URL=postgresql://admin:password123@database:5432/computer_lab_db?schema=public
+      NODE_ENV: production
+
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-password123}@database:5432/${POSTGRES_DB:-computer_lab_db}?schema=public
+
     depends_on:
-      - database
-    restart: always
+      database:
+        condition: service_healthy
+
 
 volumes:
-  pgdata:
+  postgres_data:
